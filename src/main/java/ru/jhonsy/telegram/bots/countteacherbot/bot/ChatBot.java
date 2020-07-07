@@ -1,6 +1,5 @@
 package ru.jhonsy.telegram.bots.countteacherbot.bot;
 
-import com.sun.org.apache.xerces.internal.xs.XSTerm;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +11,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.jhonsy.telegram.bots.countteacherbot.model.User;
 import ru.jhonsy.telegram.bots.countteacherbot.service.UserService;
-import sun.rmi.runtime.Log;
+
+import java.util.List;
 
 
 /**
@@ -35,7 +35,7 @@ public class ChatBot extends TelegramLongPollingBot {
 
     private final UserService userService;
 
-    public ChatBot(UserService userService){
+    public ChatBot(UserService userService) {
         this.userService = userService;
     }
 
@@ -65,7 +65,7 @@ public class ChatBot extends TelegramLongPollingBot {
         BotContext context;
         BotState state;
 
-        if (user == null){
+        if (user == null) {
             state = BotState.getInitialState();
 
             user = new User(chatId, state.ordinal());
@@ -84,7 +84,7 @@ public class ChatBot extends TelegramLongPollingBot {
 
         state.handleInput(context);
 
-        do{
+        do {
             state = state.nextState();
             state.enter(context);
         } while (!state.isInputNeeded());
@@ -99,7 +99,7 @@ public class ChatBot extends TelegramLongPollingBot {
         if (user == null || !user.getAdmin())
             return false;
 
-        if (text.startsWith(BROADCAST)){
+        if (text.startsWith(BROADCAST)) {
             LOGGER.info("Admin command received: " + BROADCAST);
 
             text = text.substring(BROADCAST.length());
@@ -107,7 +107,7 @@ public class ChatBot extends TelegramLongPollingBot {
             broadcast(text);
 
             return true;
-        } else if (text.equals(LIST_USERS)){
+        } else if (text.equals(LIST_USERS)) {
             LOGGER.info("Admin command received: " + LIST_USERS);
 
             listUsers(user);
@@ -118,8 +118,7 @@ public class ChatBot extends TelegramLongPollingBot {
     }
 
 
-
-    private void sendMessage(long chatId, String text){
+    private void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage()
                 .setChatId(chatId)
                 .setText(text);
@@ -131,10 +130,24 @@ public class ChatBot extends TelegramLongPollingBot {
         }
     }
 
-    private void listUsers(User admin){
+    private void listUsers(User admin) {
+        StringBuilder sb = new StringBuilder();
+        List<User> users = userService.findAllUsers();
 
+        users.forEach(user ->
+                sb.append(user.getId())
+                        .append(' ')
+                        .append(user.getChatId())
+                        .append(' ')
+                        .append(user.getStateId())
+                        .append("\r\n")
+        );
+
+        sendMessage(admin.getChatId(), sb.toString());
     }
 
     private void broadcast(String text) {
+        List<User> users = userService.findAllUsers();
+        users.forEach(user -> sendMessage(user.getChatId(), text));
     }
 }
