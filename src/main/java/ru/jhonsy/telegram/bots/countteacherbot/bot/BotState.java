@@ -108,7 +108,7 @@ public enum BotState {
             eg.generateExample();
             keyboardMarkup.setSelective(true);
             keyboardMarkup.setResizeKeyboard(true);
-            keyboardMarkup.setOneTimeKeyboard(true);
+            keyboardMarkup.setOneTimeKeyboard(false);
 
             List<KeyboardRow> buttonsList = new ArrayList<>();
             KeyboardRow firstKeyboardRow = new KeyboardRow();
