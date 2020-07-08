@@ -9,18 +9,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public enum BotState {
 
     Start {
-        @Override
-        public void enter(BotContext context) {
-            sendMessage(context, "Привет!");
-        }
-
-        @Override
-        public BotState nextState() {
-            return WantToTrain;
-        }
-    },
-
-    WantToTrain {
         private BotState next;
 
         @Override
@@ -52,7 +40,8 @@ public enum BotState {
         public void enter(BotContext context) {
             sendMessage(context, "Сейчас я буду присылать тебе арифметические примеры, а ты должен будешь ввести ответ!\r\n" +
                     "Я проверю правильно ли ты все сделал!\r\n" +
-                    "Напиши мне \"Готов\" для начала тренировки!");
+                    "Напиши мне \"Готов\" для начала тренировки!\r\n" +
+                    "Напиши мне \"Стоп\" для остановки тренировки!");
         }
 
         @Override
@@ -78,7 +67,7 @@ public enum BotState {
         @Override
         public void enter(BotContext context) {
             eg.generateExample();
-            sendMessage(context, "Сколько будет " + eg.getExample());
+            sendMessage(context, eg.getExample());
         }
 
         @Override
@@ -91,8 +80,12 @@ public enum BotState {
                     next = Incorrect;
                 }
             } catch (NumberFormatException e){
-                sendMessage(context, "Введи число!");
-                next = Training;
+                if (context.getInput().equalsIgnoreCase("стоп")){
+                    next = GoodBye;
+                } else {
+                    sendMessage(context, "Введи число или \"Стоп\"!");
+                    next = Training;
+                }
             }
         }
 
@@ -102,49 +95,29 @@ public enum BotState {
         }
     },
 
-    Correct {
-        private BotState next;
+    Correct(false) {
 
         @Override
         public void enter(BotContext context) {
-            sendMessage(context, "Верно!\r\nХочешь еще пример? (да/нет)");
-        }
-
-        @Override
-        public void handleInput(BotContext context) {
-            if (context.getInput().equalsIgnoreCase("да")){
-                next = Training;
-            } else if (context.getInput().equalsIgnoreCase("нет")){
-                next = GoodBye;
-            }
+            sendMessage(context, "Верно!");
         }
 
         @Override
         public BotState nextState() {
-            return next;
+            return Training;
         }
     },
 
-    Incorrect {
-        private BotState next;
-
+    Incorrect(false) {
         @Override
         public void enter(BotContext context) {
-            sendMessage(context, "Неверно!\r\nХочешь еще пример? (да/нет)");
+            sendMessage(context, "Неверно!");
         }
 
-        @Override
-        public void handleInput(BotContext context) {
-            if (context.getInput().equalsIgnoreCase("да")){
-                next = Training;
-            } else if (context.getInput().equalsIgnoreCase("нет")){
-                next = GoodBye;
-            }
-        }
 
         @Override
         public BotState nextState() {
-            return next;
+            return Training;
         }
     },
 
