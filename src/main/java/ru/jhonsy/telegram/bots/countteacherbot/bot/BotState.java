@@ -32,8 +32,8 @@ public enum BotState {
         public void handleInput(BotContext context){
             String answer = context.getInput();
 
-            if (answer.equals("да")){
-                next = Training;
+            if (answer.equalsIgnoreCase("да")){
+                next = TrainingStart;
             } else {
                 next = GoodBye;
             }
@@ -45,15 +45,106 @@ public enum BotState {
         }
     },
 
-    Training(false) {
+    TrainingStart {
+        private BotState next;
+
         @Override
         public void enter(BotContext context) {
-            sendMessage(context, "Пока не поддерживается(((");
+            sendMessage(context, "Сейчас я буду присылать тебе арифметические примеры, а ты должен будешь ввести ответ!\r\n" +
+                    "Я проверю правильно ли ты все сделал!\r\n" +
+                    "Напиши мне \"Готов\" для начала тренировки!");
+        }
+
+        @Override
+        public void handleInput(BotContext context) {
+            if (context.getInput().equalsIgnoreCase("готов")){
+                next = Training;
+            } else {
+                next = GoodBye;
+            }
+
         }
 
         @Override
         public BotState nextState() {
-            return GoodBye;
+            return next;
+        }
+    },
+
+    Training {
+        private BotState next;
+        private ExampleGenerator eg = new ExampleGenerator();
+
+        @Override
+        public void enter(BotContext context) {
+            eg.generateExample();
+            sendMessage(context, "Сколько будет " + eg.getExample());
+        }
+
+        @Override
+        public void handleInput(BotContext context) {
+            try {
+                int inputResult = Integer.parseInt(context.getInput());
+                if (inputResult == eg.getResult()){
+                    next = Correct;
+                } else {
+                    next = Incorrect;
+                }
+            } catch (NumberFormatException e){
+                sendMessage(context, "Введи число!");
+                next = Training;
+            }
+        }
+
+        @Override
+        public BotState nextState() {
+            return next;
+        }
+    },
+
+    Correct {
+        private BotState next;
+
+        @Override
+        public void enter(BotContext context) {
+            sendMessage(context, "Верно!\r\nХочешь еще пример? (да/нет)");
+        }
+
+        @Override
+        public void handleInput(BotContext context) {
+            if (context.getInput().equalsIgnoreCase("да")){
+                next = Training;
+            } else if (context.getInput().equalsIgnoreCase("нет")){
+                next = GoodBye;
+            }
+        }
+
+        @Override
+        public BotState nextState() {
+            return next;
+        }
+    },
+
+    Incorrect {
+        private BotState next;
+
+        @Override
+        public void enter(BotContext context) {
+            sendMessage(context, "Неверно!\r\nХочешь еще пример? (да/нет)");
+        }
+
+        @Override
+        public void handleInput(BotContext context) {
+            if (context.getInput().equalsIgnoreCase("да")){
+                next = Training;
+            } else if (context.getInput().equalsIgnoreCase("нет")){
+                next = GoodBye;
+            }
+        }
+
+        @Override
+        public BotState nextState() {
+            return next;
         }
     },
 
@@ -104,11 +195,11 @@ public enum BotState {
         }
     }
 
-    public boolean isInputNeeded(){
+    protected boolean isInputNeeded(){
         return inputNeeded;
     }
 
-    public void handleInput(BotContext context){
+    protected void handleInput(BotContext context){
         //do nothing by default
     }
 
