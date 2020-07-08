@@ -21,6 +21,7 @@ public enum BotState {
 
         @Override
         public void enter(BotContext context) {
+
             keyboardMarkup.setSelective(true);
             keyboardMarkup.setResizeKeyboard(true);
             keyboardMarkup.setOneTimeKeyboard(true);
@@ -34,6 +35,7 @@ public enum BotState {
             buttonsList.add(firstKeyboardRow);
 
             keyboardMarkup.setKeyboard(buttonsList);
+
             sendMessage(context, "Хочешь потренироваться в устном счете?", keyboardMarkup);
         }
 
