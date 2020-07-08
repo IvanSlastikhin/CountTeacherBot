@@ -1,7 +1,14 @@
 package ru.jhonsy.telegram.bots.countteacherbot.bot;
 
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonPollType;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author: Ivan Slastikhin
@@ -10,17 +17,31 @@ public enum BotState {
 
     Start {
         private BotState next;
+        private ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 
         @Override
         public void enter(BotContext context) {
-            sendMessage(context, "Хочешь потренироваться в устном счете? (да/нет)");
+            keyboardMarkup.setSelective(true);
+            keyboardMarkup.setResizeKeyboard(true);
+            keyboardMarkup.setOneTimeKeyboard(true);
+
+            List<KeyboardRow> buttonsList = new ArrayList<>();
+            KeyboardRow firstKeyboardRow = new KeyboardRow();
+
+            firstKeyboardRow.add(new KeyboardButton("Да"));
+            firstKeyboardRow.add(new KeyboardButton("Нет"));
+
+            buttonsList.add(firstKeyboardRow);
+
+            keyboardMarkup.setKeyboard(buttonsList);
+            sendMessage(context, "Хочешь потренироваться в устном счете?", keyboardMarkup);
         }
 
         @Override
-        public void handleInput(BotContext context){
+        public void handleInput(BotContext context) {
             String answer = context.getInput();
 
-            if (answer.equalsIgnoreCase("да")){
+            if (answer.equalsIgnoreCase("да")) {
                 next = TrainingStart;
             } else {
                 next = GoodBye;
@@ -35,18 +56,33 @@ public enum BotState {
 
     TrainingStart {
         private BotState next;
+        private ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 
         @Override
         public void enter(BotContext context) {
+            keyboardMarkup.setSelective(true);
+            keyboardMarkup.setResizeKeyboard(true);
+            keyboardMarkup.setOneTimeKeyboard(true);
+
+            List<KeyboardRow> buttonsList = new ArrayList<>();
+            KeyboardRow firstKeyboardRow = new KeyboardRow();
+
+            firstKeyboardRow.add(new KeyboardButton("Готов"));
+            firstKeyboardRow.add(new KeyboardButton("Стоп"));
+
+            buttonsList.add(firstKeyboardRow);
+
+            keyboardMarkup.setKeyboard(buttonsList);
             sendMessage(context, "Сейчас я буду присылать тебе арифметические примеры, а ты должен будешь ввести ответ!\r\n" +
                     "Я проверю правильно ли ты все сделал!\r\n" +
-                    "Напиши мне \"Готов\" для начала тренировки!\r\n" +
-                    "Напиши мне \"Стоп\" для остановки тренировки!");
+                    "Нажми \"Готов\" для начала тренировки!\r\n" +
+                    "Нажми \"Стоп\" для остановки тренировки!", keyboardMarkup);
         }
 
         @Override
         public void handleInput(BotContext context) {
-            if (context.getInput().equalsIgnoreCase("готов")){
+
+            if (context.getInput().equalsIgnoreCase("готов")) {
                 next = Training;
             } else {
                 next = GoodBye;
@@ -63,24 +99,37 @@ public enum BotState {
     Training {
         private BotState next;
         private ExampleGenerator eg = new ExampleGenerator();
+        private ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 
         @Override
         public void enter(BotContext context) {
             eg.generateExample();
-            sendMessage(context, eg.getExample());
+            keyboardMarkup.setSelective(true);
+            keyboardMarkup.setResizeKeyboard(true);
+            keyboardMarkup.setOneTimeKeyboard(true);
+
+            List<KeyboardRow> buttonsList = new ArrayList<>();
+            KeyboardRow firstKeyboardRow = new KeyboardRow();
+
+            firstKeyboardRow.add(new KeyboardButton("Стоп"));
+
+            buttonsList.add(firstKeyboardRow);
+
+            keyboardMarkup.setKeyboard(buttonsList);
+            sendMessage(context, eg.getExample(), keyboardMarkup);
         }
 
         @Override
         public void handleInput(BotContext context) {
             try {
                 int inputResult = Integer.parseInt(context.getInput());
-                if (inputResult == eg.getResult()){
+                if (inputResult == eg.getResult()) {
                     next = Correct;
                 } else {
                     next = Incorrect;
                 }
-            } catch (NumberFormatException e){
-                if (context.getInput().equalsIgnoreCase("стоп")){
+            } catch (NumberFormatException e) {
+                if (context.getInput().equalsIgnoreCase("стоп")) {
                     next = GoodBye;
                 } else {
                     sendMessage(context, "Введи число или \"Стоп\"!");
@@ -96,7 +145,6 @@ public enum BotState {
     },
 
     Correct(false) {
-
         @Override
         public void enter(BotContext context) {
             sendMessage(context, "Верно!");
@@ -144,38 +192,52 @@ public enum BotState {
         this.inputNeeded = inputNeeded;
     }
 
-    public static BotState getInitialState(){
+    public static BotState getInitialState() {
         return byId(0);
     }
 
-    public static BotState byId(int id){
-        if (states == null){
+    public static BotState byId(int id) {
+        if (states == null) {
             states = BotState.values();
         }
 
         return states[id];
     }
 
-    protected void sendMessage(BotContext context, String text){
+    protected void sendMessage(BotContext context, String text) {
         SendMessage message = new SendMessage()
                 .setChatId(context.getUser().getChatId())
                 .setText(text);
 
-        try{
+        try {
             context.getBot().execute(message);
-        } catch (TelegramApiException e){
+        } catch (TelegramApiException e) {
             e.printStackTrace();
         }
     }
 
-    protected boolean isInputNeeded(){
+    protected void sendMessage(BotContext context, String text, ReplyKeyboardMarkup keyboardMarkup) {
+        SendMessage message = new SendMessage()
+                .setReplyMarkup(keyboardMarkup)
+                .setChatId(context.getUser().getChatId())
+                .setText(text);
+
+        try {
+            context.getBot().execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected boolean isInputNeeded() {
         return inputNeeded;
     }
 
-    protected void handleInput(BotContext context){
+    protected void handleInput(BotContext context) {
         //do nothing by default
     }
 
     public abstract void enter(BotContext context);
+
     public abstract BotState nextState();
 }
