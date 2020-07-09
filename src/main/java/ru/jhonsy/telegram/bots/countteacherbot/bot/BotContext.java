@@ -10,7 +10,6 @@ public class BotContext {
     private final ChatBot bot;
     private final User user;
     private final String input;
-    private final ExampleGenerator exampleGenerator;
 
     public static BotContext of(ChatBot chatBot, User user, String input){
         return new BotContext(chatBot, user, input);
@@ -20,7 +19,6 @@ public class BotContext {
         this.bot = chatBot;
         this.user = user;
         this.input = input;
-        this.exampleGenerator = new ExampleGenerator();
     }
 
     public User getUser() {
@@ -35,7 +33,4 @@ public class BotContext {
         return input;
     }
 
-    public ExampleGenerator getExampleGenerator() {
-        return exampleGenerator;
-    }
 }

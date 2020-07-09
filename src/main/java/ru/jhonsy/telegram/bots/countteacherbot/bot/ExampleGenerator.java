@@ -12,9 +12,10 @@ public class ExampleGenerator {
     private final Character[] operations = {'/', '*', '+', '-'};
 
     public ExampleGenerator() {
+        generateExample();
     }
 
-    protected void generateExample(){
+    protected void generateExample() {
         Random random = new Random();
 
         int operationIndex = random.nextInt(4);
@@ -44,6 +45,9 @@ public class ExampleGenerator {
                 this.result = minuend - subtrahend;
                 this.example = minuend + " - " + subtrahend + " = ?";
                 break;
+            default:
+                this.example = "";
+                this.result = 0;
         }
 
     }

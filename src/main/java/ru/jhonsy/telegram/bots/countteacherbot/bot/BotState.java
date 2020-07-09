@@ -3,7 +3,6 @@ package ru.jhonsy.telegram.bots.countteacherbot.bot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButtonPollType;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
@@ -104,8 +103,11 @@ public enum BotState {
 
         @Override
         public void enter(BotContext context) {
-            ExampleGenerator eg = context.getExampleGenerator();
+
+            eg = new ExampleGenerator();
+
             eg.generateExample();
+
             keyboardMarkup.setSelective(true);
             keyboardMarkup.setResizeKeyboard(true);
             keyboardMarkup.setOneTimeKeyboard(false);
@@ -124,7 +126,9 @@ public enum BotState {
         @Override
         public void handleInput(BotContext context) {
             try {
-                ExampleGenerator eg = context.getExampleGenerator();
+                System.out.println(eg.toString());
+                System.out.println(eg.getExample());
+                System.out.println(eg.getResult());
                 int inputResult = Integer.parseInt(context.getInput());
                 if (inputResult == eg.getResult()) {
                     next = Correct;
@@ -162,7 +166,6 @@ public enum BotState {
     Incorrect(false) {
         @Override
         public void enter(BotContext context) {
-            ExampleGenerator eg = context.getExampleGenerator();
             sendMessage(context, "Неверно!\r\nПравильный ответ: " + eg.getResult());
         }
 
@@ -185,6 +188,7 @@ public enum BotState {
         }
     };
 
+    private static ExampleGenerator eg;
     private static BotState[] states;
     private final boolean inputNeeded;
 
