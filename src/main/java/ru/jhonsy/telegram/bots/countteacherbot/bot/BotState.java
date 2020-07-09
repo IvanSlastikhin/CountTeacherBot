@@ -126,9 +126,6 @@ public enum BotState {
         @Override
         public void handleInput(BotContext context) {
             try {
-                System.out.println(eg.toString());
-                System.out.println(eg.getExample());
-                System.out.println(eg.getResult());
                 int inputResult = Integer.parseInt(context.getInput());
                 if (inputResult == eg.getResult()) {
                     next = Correct;
