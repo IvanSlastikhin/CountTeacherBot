@@ -100,11 +100,11 @@ public enum BotState {
 
     Training {
         private BotState next;
-        private ExampleGenerator eg = new ExampleGenerator();
         private ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 
         @Override
         public void enter(BotContext context) {
+            ExampleGenerator eg = context.getExampleGenerator();
             eg.generateExample();
             keyboardMarkup.setSelective(true);
             keyboardMarkup.setResizeKeyboard(true);
@@ -124,6 +124,7 @@ public enum BotState {
         @Override
         public void handleInput(BotContext context) {
             try {
+                ExampleGenerator eg = context.getExampleGenerator();
                 int inputResult = Integer.parseInt(context.getInput());
                 if (inputResult == eg.getResult()) {
                     next = Correct;
@@ -161,7 +162,8 @@ public enum BotState {
     Incorrect(false) {
         @Override
         public void enter(BotContext context) {
-            sendMessage(context, "Неверно!");
+            ExampleGenerator eg = context.getExampleGenerator();
+            sendMessage(context, "Неверно!\r\nПравильный ответ: " + eg.getResult());
         }
 
 
@@ -171,7 +173,7 @@ public enum BotState {
         }
     },
 
-    GoodBye(false) {
+    GoodBye {
         @Override
         public void enter(BotContext context) {
             sendMessage(context, "До новых встреч!");
