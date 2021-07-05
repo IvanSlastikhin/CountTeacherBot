@@ -1,4 +1,4 @@
-package DAO.User;
+package ru.slastikhin.crud.DAO;
 
 /**
  * @Author: Ivan Slastikhin
