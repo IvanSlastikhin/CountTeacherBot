@@ -1,4 +1,4 @@
-package Controllers;
+package ru.slastikhin.crud.Controllers;
 
 /**
  * @Author: Ivan Slastikhin
